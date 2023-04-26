@@ -1,0 +1,61 @@
+import telegram
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+import random
+
+# Список вопросов и ответов
+questions = [
+    {
+        "question": "Какая столица у Японии?",
+        "answers": ["Токио", "Киото", "Осака"],
+        "correct": "Токио"
+    },
+    {
+        "question": "Кто из перечисленных является президентом США?",
+        "answers": ["Барак Обама", "Дональд Трамп", "Владимир Путин"],
+        "correct": "Дональд Трамп"
+    },
+    {
+        "question": "В каком году началась Вторая мировая война?",
+        "answers": ["1939", "1941", "1945"],
+        "correct": "1939"
+    }
+]
+
+# Функция для начала игры
+def start(update, context):
+    # Выбираем случайный вопрос из списка
+    question = random.choice(questions)
+    # Сохраняем правильный ответ в контексте
+    context.user_data['correct'] = question['correct']
+    # Отправляем вопрос пользователю
+    update.message.reply_text(question['question'])
+
+# Функция для проверки ответа
+def answer(update, context):
+    # Получаем ответ от пользователя
+    user_answer = update.message.text
+    # Получаем правильный ответ из контекста
+    correct_answer = context.user_data['correct']
+    # Проверяем ответ
+    if user_answer == correct_answer:
+        update.message.reply_text("Правильно!")
+    else:
+        update.message.reply_text("Неправильно, правильный ответ: " + correct_answer)
+    # Запускаем следующий вопрос
+    start(update, context)
+
+# Функция для остановки игры
+def stop(update, context):
+    update.message.reply_text("Игра остановлена")
+    # Очищаем контекст
+    context.user_data.clear()
+
+# Создаем бота и добавляем обработчики
+updater = Updater(token='YOUR_TOKEN_HERE', use_context=True)
+dispatcher = updater.dispatcher
+dispatcher.add_handler(CommandHandler('start', start))
+dispatcher.add_handler(MessageHandler(Filters.text, answer))
+dispatcher.add_handler(CommandHandler('stop', stop))
+
+# Запускаем бота
+updater.start_polling()
